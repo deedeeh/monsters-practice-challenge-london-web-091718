@@ -14,12 +14,18 @@ const state = {
   limit: 50
 }
 
+const updateDisabledStateOfButtons = () => {
+  backBtn.disabled = state.page === 1;
+  forwardBtn.disabled = state.monsters.length < state.limit;
+}
+
 const nextPage = () => {
   state.page++
   getMonsters(state.limit, state.page)
     .then(monsters => {
-      monsterList.innerHTML = '';
-      renderMonsters(monsters)
+      state.monsters = monsters
+      updateMonsters(state.monsters)
+      updateDisabledStateOfButtons()
     })
 }
 
@@ -27,8 +33,9 @@ const previousPage = () => {
   state.page--
   getMonsters(state.limit, state.page)
   .then(monsters => {
-    monsterList.innerHTML = '';
-    renderMonsters(monsters)
+    state.monsters = monsters
+    updateMonsters(state.monsters)
+    updateDisabledStateOfButtons()
   })
 }
 
@@ -43,11 +50,13 @@ const showErrors = errors => {
 
 const checkValidation = monster => {
   const errors = []
-  if(monster.name.length < 4 && monster.name.length > 20) {
+  if(monster.name.length < 4 || monster.name.length > 20) {
     errors.push('Monster name should be longer than 4 & less than 20 characters')
-  } else if(typeof(monster.age) !== 'number') {
-    erros.push('Monster age should be a number')
-  } else if(monster.description.length < 12 && monster.description.length > 35) {
+  }
+  if(monster.age <= 0) {
+    errors.push('Monster age should be greater than 0')
+  }
+  if(monster.description.length < 12 || monster.description.length > 35) {
     errors.push('Monster description should be longer than 12 & less than 35 characters')
   }
   return errors
@@ -58,14 +67,14 @@ const clearErrors = () => {
 }
 
 const renderMonster = monster => {
-  const monsterItem = document.createElement('div')
-  monsterItem.className = 'monster-class'
-  monsterItem.innerHTML =
+  const monsterItem = document.createElement('div') // create
+  monsterItem.className = 'monster-class' // update
+  monsterItem.innerHTML =                 // update
   `<h2>${monster.name}</h2>
   <h5>Age: ${monster.age}</h5>
   <p>Bio: ${monster.description}</p>
   `
-  monsterList.appendChild(monsterItem)
+  monsterList.appendChild(monsterItem) // append
 }
 
 const renderMonsters = monsters => {
@@ -88,6 +97,7 @@ monsterForm.addEventListener('submit', event => {
   }
 
   const monsterErrors = checkValidation(monster)
+  console.log(monsterErrors, monster)
   clearErrors()
   if(monsterErrors.length === 0){
     createMonster(monster)
@@ -98,8 +108,6 @@ monsterForm.addEventListener('submit', event => {
   }
 })
 
-
-
 forwardBtn.addEventListener('click', nextPage)
 
 backBtn.addEventListener('click', previousPage)
@@ -107,5 +115,5 @@ backBtn.addEventListener('click', previousPage)
 getMonsters(state.limit, state.page)
   .then(monsters => {
     state.monsters = monsters
-    updateMonsters(monsters)
+    updateMonsters(state.monsters)
   })
